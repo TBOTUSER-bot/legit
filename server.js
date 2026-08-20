@@ -59,7 +59,7 @@ app.get('/', (req, res) => {
 app.post('/save-location', (req, res) => {
     const { latitude, longitude, accuracy } = req.body;
     
-    console.log(\`[GPS LOG] Precise Location - Lat: \${latitude}, Lon: \${longitude} (Accuracy: \${accuracy})\`);
+    console.log(`[GPS LOG] Precise Location - Lat: ${latitude}, Lon: ${longitude} (Accuracy: ${accuracy})`);
     
     res.status(200).json({ status: 'success' });
 });
