@@ -2,15 +2,16 @@ const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Main route to capture user connections
-app.get('/track-click', (req, res) => {
-    // Extract the public IP address from request headers
-    const userIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    
-    // Clean string formatting to prevent SyntaxErrors
+app.set('trust proxy', true);
+
+// Changed '/track-click' to '/'
+app.get('/', (req, res) => {
+    const userIp = req.headers['x-forwarded-for'] 
+        ? req.headers['x-forwarded-for'].split(',')[0].trim() 
+        : req.socket.remoteAddress;
+
     console.log("[LOG] Link clicked! User IP address logged: " + userIp);
-    
-    // What the user sees on their screen when they click
+
     res.send('<h1>Thank you for clicking!</h1><p>Your visit has been successfully recorded.</p>');
 });
 
